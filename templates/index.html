@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<meta ???><!FIXME>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, scalable=no">
 		<title>历史选择题练习场</title>
 	</head>
 	<body>
@@ -34,93 +34,93 @@
 			var showAnswer = false,
 			    questions = [],
 			    problemsDiv = document.getElementById("questionContainer")
-  class Question {
-    constructor(data) {
-      this.data = data;
-      this.selected = null;
-      this.dom = {
-        container: null,
-        resultText: null
-      };
-    }
+            class Question {
+                constructor(data) {
+                this.data = data;
+                this.selected = null;
+                this.dom = {
+                    container: null,
+                    resultText: null
+                };
+                }
 
-    render(container) {
-      if (this.dom.container) {
-        this.dom.container.innerHTML = '';
-      } else {
-        this.dom.container = document.createElement('div');
-        this.dom.container.className = 'question-box';
-        container.appendChild(this.dom.container);
-      }
+                render(container) {
+                    if (this.dom.container) {
+                        this.dom.container.innerHTML = '';
+                    } else {
+                        this.dom.container = document.createElement('div');
+                        this.dom.container.className = 'question-box';
+                        container.appendChild(this.dom.container);
+                    }
 
-      const title = document.createElement('div');
-      title.className = 'question-title';
-      title.textContent = `第 ${this.data.id} 题`;
-      this.dom.container.appendChild(title);
+                    const title = document.createElement('div');
+                    title.className = 'question-title';
+                    title.textContent = `第 ${this.data.id} 题`;
+                    this.dom.container.appendChild(title);
 
-      const problem = document.createElement('p');
-      problem.textContent = this.data.problem;
-      this.dom.container.appendChild(problem);
+                    const problem = document.createElement('p');
+                    problem.textContent = this.data.problem;
+                    this.dom.container.appendChild(problem);
 
-      const optionsDiv = document.createElement('div');
-      optionsDiv.className = 'question-options';
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'question-options';
 
-      const optionKeys = ['a', 'b', 'c', 'd'];
-      optionKeys.forEach(key => {
-        const label = document.createElement('label');
+                    const optionKeys = ['a', 'b', 'c', 'd'];
+                    optionKeys.forEach(key => {
+                        const label = document.createElement('label');
 
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = `q-${this.data.id}`;
-        radio.value = key.toUpperCase();
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = `q-${this.data.id}`;
+                        radio.value = key.toUpperCase();
 
-        const isCorrect = this.data.answer.includes(radio.value);
+                        const isCorrect = this.data.answer.includes(radio.value);
 
-        if (showAnswer && isCorrect) {
-          radio.checked = true;
-          radio.disabled = true;
-        }
+                        if (showAnswer && isCorrect) {
+                            radio.checked = true;
+                            radio.disabled = true;
+                        }
 
-        radio.addEventListener('change', () => {
-          if (!showAnswer) {
-            this.selected = radio.value;
-            this.judge();
-          }
-        });
+                        radio.addEventListener('change', () => {
+                            if (!showAnswer) {
+                            this.selected = radio.value;
+                            this.judge();
+                            }
+                        });
 
-        label.appendChild(radio);
-        label.appendChild(document.createTextNode(` ${this.data[key]}`));
-        optionsDiv.appendChild(label);
-      });
+                        label.appendChild(radio);
+                        label.appendChild(document.createTextNode(` ${this.data[key]}`));
+                        optionsDiv.appendChild(label);
+                    });
 
-      this.dom.container.appendChild(optionsDiv);
+                    this.dom.container.appendChild(optionsDiv);
 
-      const answerText = document.createElement('div');
-      this.dom.resultText = answerText;
-      answerText.className = 'correct-answer';
-      this.dom.container.appendChild(answerText);
-      if (showAnswer) {
-        answerText.textContent = `✅ 正确答案：${JSON.parse(this.data.answer.replace(/'/g,'"')).join(', ')}`;
-      }
-    }
+                    const answerText = document.createElement('div');
+                    this.dom.resultText = answerText;
+                    answerText.className = 'correct-answer';
+                    this.dom.container.appendChild(answerText);
+                    if (showAnswer) {
+                    answerText.textContent = `✅ 正确答案：${JSON.parse(this.data.answer.replace(/'/g,'"')).join(', ')}`;
+                    }
+                }
 
-    judge() {
-      if (!this.selected) return;
-      const isCorrect = this.data.answer.includes(this.selected);
-      this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
-      this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
-    }
-  }
-  // 封装的题目数组渲染函数
-  function renderQuestionList(questionDataList) {
-    const container = document.getElementById('questionContainer');
-    container.innerHTML = '';
+                judge() {
+                    if (!this.selected) return;
+                    const isCorrect = this.data.answer.includes(this.selected);
+                    this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
+                    this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
+                }
+            }
+            // 封装的题目数组渲染函数
+            function renderQuestionList(questionDataList) {
+                const container = document.getElementById('questionContainer');
+                container.innerHTML = '';
 
-    questionDataList.forEach(data => {
-      const q = new Question(data);
-      q.render(container);
-    });
-  }
+                questionDataList.forEach(data => {
+                    const q = new Question(data);
+                    q.render(container);
+                });
+            }
 			document.getElementById("modeForm")
 				.addEventListener("change", e => {
 					showAnswer = e.target.value === "recite";
