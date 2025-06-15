@@ -2,7 +2,7 @@
 #HistoryExercise 历史选择题练习场 v1.0_1
 #2025.6.15
 
-from flask import Flask, request, render_template
+from flask import Flask, render_template
 import libproblem
 
 app = Flask(__name__)
@@ -13,4 +13,4 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(port=8081,debug=True)
+    app.run(port=8081)

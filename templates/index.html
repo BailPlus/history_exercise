@@ -4,6 +4,52 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, scalable=no">
 		<title>历史选择题练习场</title>
+        <style>
+            body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f7f9fc;
+            }
+
+            .question-box {
+            border: 1px solid #dcdcdc;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+
+            .question-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+            }
+
+            .question-options label {
+            display: block;
+            margin: 0.3rem 0;
+            }
+
+            .result-text {
+            margin-top: 0.5rem;
+            font-weight: bold;
+            }
+
+            .correct-answer {
+            color: green;
+            margin-top: 0.5rem;
+            }
+
+            input[type="radio"]:disabled {
+            opacity: 0.6;
+            }
+
+            #toggleBox {
+            margin-bottom: 1rem;
+            }
+        </style>
 	</head>
 	<body>
 		<div class="selectProblemDiv">
@@ -19,7 +65,7 @@
 				<input type="submit" value="查看">
 			</form>
 			<form id="randomProblemForm">
-				随机<input type="text" name="num">道
+				随机<input type="text" name="count">道
 				<input type="submit" value="走起">
 			</form>
 			<form id="searchProblemForm">
@@ -36,12 +82,11 @@
 			    problemsDiv = document.getElementById("questionContainer")
             class Question {
                 constructor(data) {
-                this.data = data;
-                this.selected = null;
-                this.dom = {
-                    container: null,
-                    resultText: null
-                };
+                    this.data = data;
+                    this.dom = {
+                        container: null,
+                        resultText: null
+                    };
                 }
 
                 render(container) {
@@ -59,7 +104,7 @@
                     this.dom.container.appendChild(title);
 
                     const problem = document.createElement('p');
-                    problem.textContent = this.data.problem;
+                    problem.innerHTML = this.data.problem;
                     this.dom.container.appendChild(problem);
 
                     const optionsDiv = document.createElement('div');
@@ -68,28 +113,24 @@
                     const optionKeys = ['a', 'b', 'c', 'd'];
                     optionKeys.forEach(key => {
                         const label = document.createElement('label');
-
                         const radio = document.createElement('input');
-                        radio.type = 'radio';
+                        radio.type = 'checkbox';
                         radio.name = `q-${this.data.id}`;
                         radio.value = key.toUpperCase();
 
                         const isCorrect = this.data.answer.includes(radio.value);
 
-                        if (showAnswer && isCorrect) {
-                            radio.checked = true;
+                        if (showAnswer) {
                             radio.disabled = true;
+                            if (isCorrect) radio.checked = true;
                         }
 
-                        radio.addEventListener('change', () => {
-                            if (!showAnswer) {
-                            this.selected = radio.value;
+                        radio.addEventListener('change', e => {
                             this.judge();
-                            }
                         });
 
                         label.appendChild(radio);
-                        label.appendChild(document.createTextNode(` ${this.data[key]}`));
+                        label.appendChild(document.createTextNode(this.data[key]));
                         optionsDiv.appendChild(label);
                     });
 
@@ -100,13 +141,18 @@
                     answerText.className = 'correct-answer';
                     this.dom.container.appendChild(answerText);
                     if (showAnswer) {
-                    answerText.textContent = `✅ 正确答案：${JSON.parse(this.data.answer.replace(/'/g,'"')).join(', ')}`;
+                    answerText.textContent = `✅ 正确答案：${this.data.answer.join(', ')}`;
                     }
                 }
 
                 judge() {
-                    if (!this.selected) return;
-                    const isCorrect = this.data.answer.includes(this.selected);
+                    const checkboxes = this.dom.container.querySelectorAll(`input[name="q-${this.data.id}"]:checked`);
+                    const selectedAnswers = Array.from(checkboxes).map(cb => cb.value);
+                    if (!selectedAnswers.length) return;
+                    const isCorrect =
+                        selectedAnswers.length === this.data.answer.length &&
+                        selectedAnswers.every(v => this.data.answer.includes(v)) &&
+                        this.data.answer.every(v => selectedAnswers.includes(v));
                     this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
                     this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
                 }
@@ -117,10 +163,27 @@
                 container.innerHTML = '';
 
                 questionDataList.forEach(data => {
+                    if (!Array.isArray(data.answer)) data.answer = JSON.parse(data.answer.replace(/'/g,'"'));
                     const q = new Question(data);
                     q.render(container);
                 });
             }
+
+            function getProblems(url) {
+                fetch(url)
+					.then(res => res.json())
+					.then(data => {
+						if (!data.success) problemsDiv.innerText = data.error;
+						else {
+							questions = data.problems;
+							renderQuestionList(data.problems)
+						}
+					})
+					.catch(_ => {
+						problemsDiv.innerText = "获取题目时发生错误";
+					})
+            }
+
 			document.getElementById("modeForm")
 				.addEventListener("change", e => {
 					showAnswer = e.target.value === "recite";
@@ -129,19 +192,18 @@
 			document.getElementById("problemIdForm")
 				.addEventListener("submit", e => {
 					e.preventDefault();
-					fetch("/problems/"+e.target.elements.problemId.value)
-						.then(res => res.json())
-						.then(data => {
-							if (!data.success) problemsDiv.innerText = data.error;
-							else {
-								questions = data.problems;
-								renderQuestionList(data.problems)
-							}
-						})
-						.catch(_ => {
-							problemsDiv.innerText = "获取题目时发生错误";
-						});
+					getProblems("/problems/"+e.target.elements.problemId.value)
 				})
+            document.getElementById("randomProblemForm")
+                .addEventListener("submit", e => {
+                    e.preventDefault();
+                    getProblems("/problems/random?num="+e.target.elements.count.value)
+                })
+            document.getElementById("searchProblemForm")
+                .addEventListener("submit", e => {
+                    e.preventDefault();
+                    getProblems("/problems/search?q="+e.target.elements.keyword.value)
+                })
 		</script>
 	</body>
 </html>
