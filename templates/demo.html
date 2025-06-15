@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>选择题练习系统</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f7f9fc;
+    }
+
+    .question-box {
+      border: 1px solid #dcdcdc;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .question-options label {
+      display: block;
+      margin: 0.3rem 0;
+    }
+
+    .result-text {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    .correct-answer {
+      color: green;
+      margin-top: 0.5rem;
+    }
+
+    input[type="radio"]:disabled {
+      opacity: 0.6;
+    }
+
+    #toggleBox {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 背题模式开关 -->
+<div id="toggleBox">
+  <label><input type="checkbox" id="toggleShowAnswer"> 开启背题模式（显示答案并锁定选项）</label>
+</div>
+
+<!-- 题目容器 -->
+<div id="questionContainer"></div>
+
+<script>
+  // 全局变量：是否开启背题模式
+  let showAnswer = false;
+
+  // 题目类
+  class Question {
+    constructor(data) {
+      this.data = data;
+      this.selected = null;
+      this.dom = {
+        container: null,
+        resultText: null
+      };
+    }
+
+    render(container) {
+      if (this.dom.container) {
+        this.dom.container.innerHTML = '';
+      } else {
+        this.dom.container = document.createElement('div');
+        this.dom.container.className = 'question-box';
+        container.appendChild(this.dom.container);
+      }
+
+      const title = document.createElement('div');
+      title.className = 'question-title';
+      title.textContent = `第 ${this.data.id} 题`;
+      this.dom.container.appendChild(title);
+
+      const problem = document.createElement('p');
+      problem.textContent = this.data.problem;
+      this.dom.container.appendChild(problem);
+
+      const optionsDiv = document.createElement('div');
+      optionsDiv.className = 'question-options';
+
+      const optionKeys = ['a', 'b', 'c', 'd'];
+      optionKeys.forEach(key => {
+        const label = document.createElement('label');
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = `q-${this.data.id}`;
+        radio.value = key.toUpperCase();
+
+        const isCorrect = this.data.answer.includes(radio.value);
+
+        if (showAnswer && isCorrect) {
+          radio.checked = true;
+          radio.disabled = true;
+        }
+
+        radio.addEventListener('change', () => {
+          if (!showAnswer) {
+            this.selected = radio.value;
+            this.judge();
+          }
+        });
+
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(` ${this.data[key]}`));
+        optionsDiv.appendChild(label);
+      });
+
+      this.dom.container.appendChild(optionsDiv);
+
+      const answerText = document.createElement('div');
+      this.dom.resultText = answerText;
+      answerText.className = 'correct-answer';
+      this.dom.container.appendChild(answerText);
+      if (showAnswer) {
+        answerText.textContent = `✅ 正确答案：${this.data.answer.join(', ')}`;
+      }
+    }
+
+    judge() {
+      if (!this.selected) return;
+      const isCorrect = this.data.answer.includes(this.selected);
+      this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
+      this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
+    }
+  }
+
+  // 封装的题目数组渲染函数
+  function renderQuestionList(questionDataList) {
+    const container = document.getElementById('questionContainer');
+    container.innerHTML = '';
+
+    questionDataList.forEach(data => {
+      const q = new Question(data);
+      q.render(container);
+    });
+  }
+
+  // 示例题目数据
+  const questions = [
+    {
+      id: 1,
+      problem: '以下哪个不是编程语言？',
+      a: 'JavaScript',
+      b: 'HTML',
+      c: 'Python',
+      d: 'Java',
+      answer: ['B']
+    },
+    {
+      id: 2,
+      problem: '下列哪种结构是线性结构？',
+      a: '树',
+      b: '图',
+      c: '栈',
+      d: '二叉堆',
+      answer: ['C']
+    }
+  ];
+
+  // 初始渲染
+  renderQuestionList(questions);
+
+  // 监听切换事件
+  document.getElementById('toggleShowAnswer').addEventListener('change', function () {
+    showAnswer = this.checked;
+    renderQuestionList(questions); // 重新渲染所有题目
+  });
+</script>
+
+</body>
+</html>

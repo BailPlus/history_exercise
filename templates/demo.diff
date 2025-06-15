@@ -1,0 +1,70 @@
+     // 结果提示
+     const resultText = document.createElement('div');
+     resultText.className = 'result-text';
+     this.dom.resultText = resultText;
+     this.dom.container.appendChild(resultText);
+ 
+-    if (showAnswer) {
+-      const answerText = document.createElement('div');
+-      answerText.className = 'correct-answer';
+-      answerText.textContent = `✅ 正确答案：${this.data.answer.join(', ')}`;
+-      this.dom.container.appendChild(answerText);
+-    }
+-
+     const optionKeys = ['a', 'b', 'c', 'd'];
+     optionKeys.forEach(key => {
+       const label = document.createElement('label');
+ 
+       const radio = document.createElement('input');
+       radio.type = 'radio';
+       radio.name = `q-${this.data.id}`;
+       radio.value = key.toUpperCase();
+ 
+       const isCorrect = this.data.answer.includes(radio.value);
+ 
+       if (showAnswer && isCorrect) {
+         radio.checked = true;
+         radio.disabled = true;
+       }
+ 
+       radio.addEventListener('change', () => {
+         if (!showAnswer) {
+           this.selected = radio.value;
+           this.judge();
+         }
+       });
+ 
+       label.appendChild(radio);
+       label.appendChild(document.createTextNode(` ${this.data[key]}`));
+       optionsDiv.appendChild(label);
+     });
+ 
+     this.dom.container.appendChild(optionsDiv);
+-
+-    if (showAnswer) {
+-      const answerText = document.createElement('div');
+-      answerText.className = 'correct-answer';
+-      answerText.textContent = `✅ 正确答案：${this.data.answer.join(', ')}`;
+-      this.dom.container.appendChild(answerText);
+-    }
++    
++    // 统一显示区域：根据模式决定显示内容
++    if (showAnswer) {
++      const correctAnswers = this.data.answer.join(', ');
++      this.dom.resultText.textContent = `✅ 正确答案：${correctAnswers}`;
++      this.dom.resultText.style.color = 'green';
++    } else {
++      this.dom.resultText.textContent = '';
++    }
+   }
+ 
+   judge() {
+-    if (!this.selected) return;
+-    const isCorrect = this.data.answer.includes(this.selected);
+-    this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
+-    this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
++    if (!this.selected || showAnswer) return; // 如果是背题模式，不显示判断结果
++    const isCorrect = this.data.answer.includes(this.selected);
++    this.dom.resultText.textContent = isCorrect ? '✅ 正确' : '❌ 错误';
++    this.dom.resultText.style.color = isCorrect ? 'green' : 'red';
+   }

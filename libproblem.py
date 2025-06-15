@@ -17,7 +17,7 @@ def get_problem_by_id(problem_id):
     with db:
         cursor = db.cursor()
         cursor.execute('SELECT * FROM problems WHERE id = ?', (problem_id,))
-        problems = cursor.fetchone()
+        problems = cursor.fetchall()
         if not problems:
             return {
                 'success': False,
